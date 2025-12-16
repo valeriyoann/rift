@@ -260,7 +260,9 @@ class Annex:
     def get(self, identifier, destpath):
         """Get a file identified by identifier and copy it at destpath."""
         # 1. See if we can restore from cache
+        logging.debug('in get')
         if self.restore_cache:
+            logging.debug('in get:cache')
             self.make_restore_cache()
             cached_path = self.get_cached_path(identifier)
             if os.path.isfile(cached_path):
@@ -272,6 +274,7 @@ class Annex:
         if self.annex_is_remote:
             # Checking annex, expecting annex path to be an http(s) url
 
+            logging.debug('in get:remote_annex')
             idpath = os.path.join(self.annex_path, identifier)
             with tempfile.TemporaryDirectory() as tmp_dir:
                 tmp_file = os.path.join(tmp_dir, identifier)
@@ -280,17 +283,20 @@ class Annex:
 
                     if res:
                         with open(tmp_file, 'wb') as f:
-                            for chunk in res.iter_content(chunk_size=8192):
+                            for chunk in res.raw.read(8192):
+                                logging.debug('blob check 1 2 1 2')
+                                if not chunk:
+                                    break
                                 f.write(chunk)
 
                             if self.restore_cache:
                                 cached_path = self.get_cached_path(identifier)
                                 shutil.move(tmp_file, cached_path)
-                                logging.debug('Extracting %s to %s', identifier, destpath)
+                                logging.debug('1 - Extracting %s to %s', identifier, destpath)
                                 cached_path = self.get_cached_path(identifier)
                                 shutil.copyfile(cached_path, destpath)
                             else:
-                                logging.debug('Extracting %s to %s', identifier, destpath)
+                                logging.debug('2 - Extracting %s to %s', identifier, destpath)
                                 shutil.move(tmp_file, destpath)
 
                             return
@@ -302,7 +308,7 @@ class Annex:
             logging.info("did not find object in annex, will search staging_annex next")
         else:
             # Checking annex, expecting annex path to be a filesystem location
-            logging.debug('Extracting %s to %s', identifier, destpath)
+            logging.debug('3 - Extracting %s to %s', identifier, destpath)
             idpath = os.path.join(self.annex_path, identifier)
             if os.path.exists(idpath):
                 shutil.copyfile(idpath, destpath)
@@ -312,6 +318,7 @@ class Annex:
 
         # 3. See if object is in the staging_annex location
         if self.push_over_s3:
+            logging.debug('in get:s3_annex')
             # Checking annex push, expecting annex push path to be an s3-providing http(s) url
             key = os.path.join(self.push_s3_prefix, identifier)
 
@@ -333,7 +340,7 @@ class Annex:
             if not success:
                 sys.exit(1)
 
-            logging.debug('Extracting %s to %s', identifier, destpath)
+            logging.debug('4 - Extracting %s to %s', identifier, destpath)
             if self.restore_cache:
                 cached_path = self.get_cached_path(identifier)
                 shutil.move(tmp_file.name, cached_path)
@@ -344,7 +351,7 @@ class Annex:
             return
 
         # Checking staging_annex location, expecting staging_annex path to be a filesystem location
-        logging.debug('Extracting %s to %s', identifier, destpath)
+        logging.debug('5 - Extracting %s to %s', identifier, destpath)
         idpath = os.path.join(self.staging_annex_path, identifier)
         shutil.copyfile(idpath, destpath)
 
