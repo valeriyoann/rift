@@ -283,11 +283,12 @@ class Annex:
 
                     if res:
                         with open(tmp_file, 'wb') as f:
-                            for chunk in res.raw.read(8192):
-                                logging.debug('blob check 1 2 1 2')
-                                if not chunk:
-                                    break
+                            chunk = res.raw.read(8192):
+                            #for chunk in res.raw.read(8192):
+                            logging.debug('blob check 1 2 1 2')
+                            while chunk:
                                 f.write(chunk)
+                                chunk = res.raw.read(8192):
 
                             if self.restore_cache:
                                 cached_path = self.get_cached_path(identifier)
