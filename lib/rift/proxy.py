@@ -112,6 +112,7 @@ class _TokenAuthRepositoryProxyHandler(BaseHTTPRequestHandler):
         # Make sure this handler is running on custom Rift threading HTTP server
         # with AuthenticatedRepositoryProxyRuntime instance.
         assert isinstance(self.server, _ThreadingHTTPServer)
+        print(f"proxy request to 'blob' with headers 'blob'")
 
         repo_key, relpath, query = self._parse_repo_route()
         if repo_key is None:
@@ -124,6 +125,7 @@ class _TokenAuthRepositoryProxyHandler(BaseHTTPRequestHandler):
 
         upstream_url = self._build_upstream_url(repo.url, relpath, query)
         headers = self._build_forward_headers(self.server.runtime.token)
+        logging.info(f"proxy request to '{str(upstream_url)}' with headers '{str(headers)}'")
 
         request = urllib.request.Request(
             upstream_url,

@@ -208,8 +208,10 @@ class Auth:
 
         token = os.environ.get("RIFT_AUTH_IDP_TOKEN")
         if token:
-            logging.debug("fetched idp token from environment")
+            logging.debug("fetched idp token from environment: " + str(token))
             return token
+        else:
+            logging.debug("failed to fetch idp token from environment")
 
         if not os.path.isfile(self.credentials_file):
             raise RiftError(
